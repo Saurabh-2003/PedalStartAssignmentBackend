@@ -5,7 +5,7 @@ import * as authController from '../controllers/userController';
 
 const userRouter:Router = express.Router();
 
-userRouter.get('/', (res:Response) => {res.json({"message": "Connected"})})
+userRouter.get('/', (res:Response) => {res.status(201).json({"message": "Connected"})})
 userRouter.post('/signup', authController.signup);
 
 userRouter.post('/login', authController.login);
