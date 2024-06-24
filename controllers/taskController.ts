@@ -47,12 +47,18 @@ interface TaskInput {
   dueDate: Date; 
 }
 
+
 // Create a new task
 export const createTask = async (req: Request, res: Response): Promise<void> => {
   const { userId, title, description, dueDate }: TaskInput & { userId: string } = req.body;
 
   if (!userId) {
-    res.status(401).json({ message: 'Unauthorized' });
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  if (!title || !description || !dueDate) {
+    res.status(400).json({ error: 'Missing required fields' });
     return;
   }
 
@@ -61,31 +67,34 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       data: {
         title,
         description,
-        dueDate: new Date(dueDate),  // Ensure dueDate is a Date object
+        dueDate: new Date(dueDate),  
         authorId: userId,
       },
     });
-    res.status(201).json({newTask});
+    res.status(201).json({ newTask });
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Bad request' });
+    console.error('Error creating task:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Update a task by ID
 export const updateTask = async (req: Request, res: Response): Promise<void> => {
   const { userId, title, description, dueDate }: TaskInput & { userId: string } = req.body;
+  
   if (!userId) {
-    res.status(401).json({ message: 'Unauthorized' });
+    res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
   const taskId = req.params.id;
+  
   try {
     const task = await db.task.findUnique({
       where: { id: taskId, authorId: userId },
     });
+    
     if (!task) {
-      res.status(404).json({ message: 'Task not found' });
+      res.status(404).json({ error: 'Task not found' });
       return;
     }
 
@@ -94,12 +103,14 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
       data: {
         title,
         description,
-        dueDate: new Date(dueDate),  // Ensure dueDate is a Date object
+        dueDate: new Date(dueDate),  
       },
     });
+    
     res.status(200).json(updatedTask);
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Bad request' });
+    console.error('Error updating task:', error);
+    res.status(400).json({ error: error.message || 'Bad request' });
   }
 };
 
@@ -107,18 +118,21 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
 // Delete a task by ID
 export const deleteTask = async (req: Request, res: Response): Promise<void> => {
   const { userId } = req.body;
+  
   if (!userId) {
-    res.status(401).json({ message: 'Unauthorized' });
+    res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
   const taskId = req.params.id;
+  
   try {
     const task = await db.task.findUnique({
       where: { id: taskId, authorId: userId },
     });
+    
     if (!task) {
-      res.status(404).json({ message: 'Task not found' });
+      res.status(404).json({ error: 'Task not found' });
       return;
     }
 
@@ -127,6 +141,7 @@ export const deleteTask = async (req: Request, res: Response): Promise<void> => 
     });
     res.status(200).json({ message: 'Task deleted' });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Internal server error' });
+    console.error('Error deleting task:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 };
