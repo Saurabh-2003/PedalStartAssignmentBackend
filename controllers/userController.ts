@@ -7,12 +7,12 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
   const { name, email, password } = req.body;
 
   if (!email || !password || !name) {
-    const errors :string[]= [];
+    const errors: string[] = [];
     if (!email) errors.push("Email is not present");
     if (!password) errors.push("Password is not present");
     if (!name) errors.push("Name is not present");
 
-    res.status(401).json({ errors });
+    res.status(400).json({ errors });
     return;
   }
 
@@ -22,7 +22,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (existingUser) {
-      res.status(400).json({ message: 'User with this email already exists' });
+      res.status(400).json({ error: 'User with this email already exists' });
       return;
     }
 
@@ -39,7 +39,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     res.status(201).json({ message: 'Signup successful', userId: newUser.id });
   } catch (error) {
     console.error('Error signing up:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -53,13 +53,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!user) {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ error: 'Email is not valid, Please signup' });
       return;
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ error: 'Password or Email is Incorrect' });
       return;
     }
 
